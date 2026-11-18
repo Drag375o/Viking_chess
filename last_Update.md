@@ -173,11 +173,12 @@ Newest first. Each version was pushed to `main` when finished.
 
 ### 0.8 · 2026-11-18 · Live on GitHub Pages
 **Changed:**
-- GitHub Pages turned on for `Drag375o/Viking_chess`, branch `main`, folder `/`: https://drag375o.github.io/Viking_chess/. Chosen because Netlify deploys are blocked by account credits (see 0.7), and Pages updates on every push.
-- Added an empty `.nojekyll`. README: Play now points to GitHub Pages, with Netlify as a second address; update instructions for both.
+- GitHub Pages turned on by the owner in the repository settings (branch `main`, folder `/`): https://drag375o.github.io/Viking_chess/. Chosen because Netlify deploys are blocked by account credits (see 0.7), and Pages updates on every push.
+- Added an empty `.nojekyll`. README: Play now points only to GitHub Pages; Netlify is described as a second copy that's updated by hand; online players are told to share the GitHub Pages link; update instructions for both.
 
 **Files:** `.nojekyll` (new), `README.md`, `last_Update.md`.
-**Deployed:** yes (GitHub Pages).
+**Tested:** the Pages URL, `js/`, `css/` and `docs/` return 200 and `Reference/` returns 404; a vs-computer game with toss, moves and undo on the Pages site in Chrome, no page errors.
+**Deployed:** yes (GitHub Pages). Netlify not redeployed (credits).
 
 ### 0.7 · 2026-11-18 · Live on Netlify
 **Changed:**

@@ -1,6 +1,6 @@
 # Hnefatafl: Viking Chess
 
-**▶ Play now: [drag375o.github.io/Viking_chess](https://drag375o.github.io/Viking_chess/)** (also on Netlify: [viking-chess-tafl.netlify.app](https://viking-chess-tafl.netlify.app))
+**▶ Play now: [drag375o.github.io/Viking_chess](https://drag375o.github.io/Viking_chess/)**
 
 A browser version of **Hnefatafl** ("the King's table"), the board game played across the Viking world. One side defends a King and tries to get him to a corner; the other side has twice as many warriors and tries to trap him.
 
@@ -171,15 +171,16 @@ It plays either side, chooses a side when it wins the toss, and stands in for on
 
 ## Running and hosting
 
-- **Online:** the game is live on GitHub Pages at [drag375o.github.io/Viking_chess](https://drag375o.github.io/Viking_chess/), and on Netlify at [viking-chess-tafl.netlify.app](https://viking-chess-tafl.netlify.app). For online rooms, both players should use the same address (and so the same version).
+- **Online:** play at [drag375o.github.io/Viking_chess](https://drag375o.github.io/Viking_chess/) (GitHub Pages, always the latest version). A second copy runs on Netlify at [viking-chess-tafl.netlify.app](https://viking-chess-tafl.netlify.app); it's updated by hand and can lag behind.
+- **Online rooms:** send your friend the GitHub Pages link so you both run the same version. Rooms are found through the PeerJS server, so they work from either address as long as both versions match.
 - **Locally:** open `index.html` in any modern browser (Chrome, Edge, Firefox, Safari). No build step.
 - **Offline:** vs Computer and same-screen games work offline. Fonts fall back to system fonts, and online rooms need internet.
 
 ### Updating the live site
 
-**GitHub Pages** publishes this repository's `main` branch (folder `/`) automatically: every push is live about a minute later. The empty `.nojekyll` file tells GitHub to serve the files as they are.
+**GitHub Pages** (the main site) publishes this repository's `main` branch automatically: every push is live about a minute later. It's set up under **Settings → Pages**: *Deploy from a branch*, branch `main`, folder `/ (root)`. The empty `.nojekyll` file tells GitHub to serve the files as they are. `Reference/` is never in the repository, so it can't be published.
 
-**Netlify** is published from a copy of the game in the `viking-chess/` folder (kept on the owner's computer, not in this repository), linked to the Netlify site through its `.netlify` folder. After changing the game, copy the changed files into it and run this from inside it:
+**Netlify** (the second copy) is published from a copy of the game in the `viking-chess/` folder (kept on the owner's computer, not in this repository), linked to the Netlify site through its `.netlify` folder. After changing the game, copy the changed files into it and run this from inside it:
 
 ```
 npx netlify-cli deploy --prod --dir .
