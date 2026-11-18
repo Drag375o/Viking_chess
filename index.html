@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" data-theme="oak">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hnefatafl · Viking Chess</title>
+  <meta name="description" content="Hnefatafl, the Viking board game: help the King escape to a corner, or trap him. Play the computer, a friend on the same screen, or online.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%232b1d12'/%3E%3Cpath d='M50 12 59 30 66 22 72 44H28l6-22 7 8z' fill='%23e3b25f'/%3E%3Cpath d='M30 46h40l-2 14c-3 22-33 22-36 0z' fill='%23efe6d2'/%3E%3Ccircle cx='50' cy='76' r='15' fill='%23a8743c' stroke='%23efe6d2' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=Cinzel:wght@500;600;700;800&family=Germania+One&family=Noto+Sans+Runic&family=Uncial+Antiqua&display=swap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/themes/oak.css">
+</head>
+<body>
+  <!-- Textures used by some themes (filter: url(#…)) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="carve" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="grain" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
+  <main id="app"></main>
+  <noscript>Hnefatafl needs JavaScript to run.</noscript>
+
+  <script src="js/engine.js"></script>
+  <script src="js/pieces.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

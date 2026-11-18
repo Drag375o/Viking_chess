@@ -1,0 +1,64 @@
+/*
+ * Carved Oak: a pyrographed wooden board on the grass, with a burnt knotwork
+ * border, verdigris-green attackers and bone-white defenders.
+ * Design reference: ref1.jpg
+ */
+[data-theme="oak"] {
+  color-scheme: dark;
+  --font-display: 'Cinzel', Georgia, serif;
+  --display-weight: 700;
+
+  --page-bg:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.05' numOctaves='2' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.25  0 0 0 0 0.42  0 0 0 0 0.18  0 0 0 0.35 -0.08'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 0%, #34512c 0%, #1e3219 45%, #0f1a0d 100%);
+  --text: #f3e9d6;
+  --muted: rgba(243, 233, 214, .66);
+  --accent: #e2ac5f;
+  --accent-ink: #2a1a0b;
+  --a-color: #86c2b2;
+  --d-color: #efe3c8;
+
+  --panel-bg: rgba(33, 24, 15, .88);
+  --panel-border: 1px solid rgba(226, 172, 95, .28);
+  --field-line: rgba(226, 172, 95, .16);
+  --option-bg: #2d2015;
+
+  --frame-bg:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.11' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.06  0 0 0 0 0.02  0 0 0 0.9 -0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, #6a3e1e, #4a2a13 60%, #3a200d);
+  --frame-pad: 6%;
+  --frame-radius: 8px;
+  --frame-shadow: 0 2px 0 #7b4b25 inset, 0 0 0 2px #24130a, 0 30px 60px rgba(0, 0, 0, .55), 0 0 40px rgba(0, 0, 0, .35) inset;
+  --frame-text: rgba(246, 222, 180, .85);
+  --band-in: 0.9%;
+  --band-w: 2.3%;
+  --band-bg:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cg fill='none' stroke='%2328140a' stroke-width='2.4'%3E%3Ccircle cx='11' cy='11' r='7.2'/%3E%3Ccircle cx='0' cy='0' r='7.2'/%3E%3Ccircle cx='22' cy='0' r='7.2'/%3E%3Ccircle cx='0' cy='22' r='7.2'/%3E%3Ccircle cx='22' cy='22' r='7.2'/%3E%3C/g%3E%3C/svg%3E") center / 14px 14px,
+    linear-gradient(#b8763f, #a7652f);
+  --band-shadow: 0 0 0 1.5px #2a150a, 0 0 6px rgba(0, 0, 0, .5) inset;
+  --band-inner-shadow: 0 0 0 1.5px #2a150a;
+
+  --grid-bg:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.005 0.14' numOctaves='3' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.2  0 0 0 0 0.06  0 0 0 0.75 -0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 50% 45%, #e0a36a 0%, #cf8d55 55%, #b57140 100%);
+  --cell-even: transparent;
+  --cell-odd: rgba(120, 52, 14, .1);
+  --line: rgba(52, 24, 8, .82);
+  --line-w: 2px;
+  --mark: rgba(52, 24, 8, .8);
+  --camp: rgba(70, 32, 10, .38);
+  --target: #ffe1a1;
+  --strike: #ff6a4a;
+  --select: #ffe7ad;
+  --last: rgba(255, 236, 170, .32);
+
+  --a-body: #2f4b47; --a-hi: #5a837b; --a-lo: #182b28; --a-face: #4a706a; --a-shield: #2b4642; --a-boss: #5a837b; --a-ink: #0d1b19;
+  --d-body: #e6dfcd; --d-hi: #fffbf1; --d-lo: #b3a88e; --d-face: #e1d8c3; --d-helm: #d1c7ae; --d-shield: #ebe3d0; --d-boss: #cbbfa3; --d-ink: #675b48;
+  --k-body: #ebe4d2; --k-hi: #fffdf6; --k-lo: #b8ab8f; --k-face: #e6ddc9; --k-beard: #e0d6bf; --k-crown: #e0b45e; --k-shield: #ede5d3; --k-boss: #d9a94f; --k-ink: #5f523e;
+  --piece-cast: rgba(40, 16, 2, .38);
+  --piece-filter: drop-shadow(0 3px 2px rgba(30, 12, 0, .45));
+}
+
+[data-theme="oak"] .logo { color: #f6e3bf; text-shadow: 0 2px 0 #5a3315, 0 6px 22px rgba(0, 0, 0, .55); }
+[data-theme="oak"] .grid { box-shadow: 0 0 18px rgba(60, 25, 5, .55) inset; }
+[data-theme="oak"] .mark-lines { filter: url(#carve); }
