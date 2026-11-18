@@ -9,7 +9,7 @@
   const E = VC.Engine, P = VC.Pieces;
   const app = document.getElementById('app');
   const STORE = 'viking-chess:settings';
-  const DEFAULTS = { mode: 'pvp', names: ['Player 1', 'Player 2'], sides: 'toss', level: 'normal', theme: 'oak', coords: true };
+  const DEFAULTS = { mode: 'cpu', names: ['Player 1', 'Player 2'], sides: 'toss', level: 'normal', theme: 'oak', coords: true };
 
   // Each theme is one stylesheet in css/themes/, scoped to [data-theme="id"].
   const THEMES = [
