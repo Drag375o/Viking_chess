@@ -564,3 +564,39 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   .side-card { padding: 12px; }
   .tray { min-height: 0; }
 }
+
+/* ---------- online ---------- */
+
+.join-box, .resume-card {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 14px; padding: 12px 14px;
+  border: 1px dashed var(--chip-border); border-radius: 12px;
+}
+.resume-card { margin: 0 0 14px; border-style: solid; border-color: var(--accent); }
+.join-text { display: flex; flex-direction: column; gap: 2px; max-width: 520px; }
+.join-row { display: flex; gap: 10px; align-items: center; }
+.code-input { width: 8.5em; text-transform: uppercase; letter-spacing: .3em; text-align: center; }
+
+.room-code { display: flex; gap: 8px; justify-content: center; }
+.room-code span {
+  display: grid; place-items: center;
+  width: 52px; height: 62px;
+  border: 2px solid var(--accent); border-radius: 10px;
+  font-family: var(--font-display); font-size: 2rem; font-weight: 800;
+  background: var(--chip-bg);
+}
+.seats { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 8px; width: min(100%, 380px); }
+.seats li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--field-line); background: var(--chip-bg); }
+.seat-name { font-weight: 700; }
+
+.request-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px;
+  padding: 8px 14px; border-radius: 12px;
+  background: var(--panel-bg); border: 1px dashed var(--chip-border);
+}
+.request-bar.ask { border: 2px solid var(--accent); }
+.seat-status { margin-top: 10px; font-size: .88rem; color: var(--muted); display: grid; gap: 6px; justify-items: start; }
+
+@media (max-width: 720px) {
+  .room-code span { width: 44px; height: 54px; font-size: 1.6rem; }
+}

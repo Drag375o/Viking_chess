@@ -44,6 +44,7 @@
     screen: 'setup', game: null, toss: null, timers: [],
     selected: null, seenPly: 0, cpuKey: '',
     online: null, joinCode: '', notice: null, rulesOpen: false, hideResult: false,
+    request: null,  // online: { type: 'undo'|'restart', from: player index }
   };
 
   /* ---------- helpers ---------- */
@@ -239,11 +240,11 @@
         <p class="tagline">Viking Chess · Lead the King to a corner, or close the trap around him.</p>
       </header>
       <div class="panel setup-panel">
-        ${typeof resumeCards === 'function' ? resumeCards() : ''}
+        ${resumeCards()}
         <div class="field">
           <h2 class="step"><span class="num">1</span>Who are you playing?</h2>
           <div class="choice-row">${chip('mode', 'cpu', 'vs Computer', !modeAvailable('cpu'))}${chip('mode', 'pvp', 'vs a Friend · same screen')}${chip('mode', 'online', 'Online · different devices', !modeAvailable('online'))}</div>
-          ${online && typeof joinBox === 'function' ? joinBox() : ''}
+          ${online ? joinBox() : ''}
         </div>
         <div class="field">
           <h2 class="step"><span class="num">2</span>${online ? 'Your name' : 'Players'}</h2>
@@ -438,7 +439,7 @@
         <div><b>${trayCount}</b><small>captured</small></div>
       </div>
       <div class="tray">${tray}</div>
-      ${typeof seatStatus === 'function' ? seatStatus(i) : ''}
+      ${seatStatus(i)}
       <div class="turn-flag">${isTurn ? (p.isCPU ? 'Thinking…' : 'To move') : ''}</div>
     </aside>`;
   }
@@ -454,8 +455,12 @@
   }
 
   function canUndo(g) {
-    if (isGuest() || (isHost() && !view.online.guestConnected && !g.players[1].isCPU)) return !!g.history.length || !!g.resigned;
+    if (view.online) {
+      if (view.request || g.resigned) return false;
+      return g.history.some(h => E.playerOf(g, h.side) === view.online.me);
+    }
     if (g.resigned) return true;
+    if (!g.players.some(p => p.isCPU)) return g.history.length > 0;
     // vs computer: only if one of your own moves is there to take back
     return g.history.some(h => isMine(E.playerOf(g, h.side)));
   }
@@ -517,11 +522,12 @@
         </div>
         <div class="board-col">
           <div class="status-line ${g.winner ? 'over' : sideClass(g.turn)}">${statusText(g)}</div>
+          ${requestBanner(g)}
           <div class="board-wrap${g.winner && !view.hideResult ? ' dimmed' : ''}">${boardHTML(g)}${resultCard(g)}</div>
           <div class="warnings">${warnings(g)}</div>
           <div class="controls">
             <button class="btn" data-action="undo"${canUndo(g) ? '' : ' disabled'}>↶ ${undoLabel}</button>
-            <button class="btn" data-action="restart"${g.history.length || g.winner ? '' : ' disabled'}>⟲ ${restartLabel}</button>
+            <button class="btn" data-action="restart"${(g.history.length || g.winner) && !(view.online && (view.request || g.winner)) ? '' : ' disabled'}>⟲ ${restartLabel}</button>
             ${g.winner ? (view.hideResult ? '<button class="btn primary" data-action="show-result">Show result</button>' : '')
               : `<button class="btn ghost" data-action="resign"${myTurn(g) || (!view.online && settings.mode === 'pvp') ? '' : ' disabled'}>⚑ Yield</button>`}
           </div>
@@ -578,7 +584,7 @@
   function undo() {
     const g = view.game;
     if (!canUndo(g)) return;
-    if (view.online && typeof requestFromMe === 'function') { requestFromMe('undo'); return; }
+    if (view.online) { requestFromMe('undo'); return; }
     takeBack(g, null);
   }
 
@@ -605,7 +611,7 @@
 
   function restart() {
     const g = view.game;
-    if (view.online && typeof requestFromMe === 'function') { requestFromMe('restart'); return; }
+    if (view.online) { requestFromMe('restart'); return; }
     if (!g.winner && !window.confirm('Restart this battle? The board goes back to the start, same sides.')) return;
     resetBoard(false);
   }
@@ -646,11 +652,521 @@
     }, 450);
   }
 
+  /* ---------- online rooms ---------- */
+  /*
+   * The room creator's browser runs the game and sends a snapshot of the
+   * state to the other player after every render. The other player only
+   * sends their moves and answers. Board styles are never synced.
+   */
+
+  const Net = VC.Net;
+  const HOSTED = 'viking-chess:hosted-game'; // room creator: the game in progress, to resume after a reload
+  const JOINED = 'viking-chess:joined-room'; // joiner: room code + seat pass, to rejoin later
+  const SAVE_HOURS = 12;
+  const TAKEOVER_SECONDS = 60;
+  const RECONNECT_TRIES = 40, RECONNECT_GAP = 3000; // keeps trying for about 2 minutes
+
+  function readSaved(key) {
+    try {
+      const s = JSON.parse(localStorage.getItem(key));
+      if (s && Date.now() - s.savedAt < SAVE_HOURS * 3600e3) return s;
+    } catch (e) { /* corrupt or blocked */ }
+    forget(key);
+    return null;
+  }
+  function writeSaved(key, data) {
+    try { localStorage.setItem(key, JSON.stringify(Object.assign({ savedAt: Date.now() }, data))); } catch (e) { /* full or blocked */ }
+  }
+  function forget(key) {
+    try { localStorage.removeItem(key); } catch (e) { /* blocked */ }
+  }
+
+  const SIDE_SUMMARY = { toss: 'Sides by rune toss', attack: 'Room creator attacks', defend: 'Room creator defends' };
+
+  function snapshot() {
+    return { t: 'state', screen: view.screen, toss: view.toss, lobby: lobbyInfo(), game: view.game, request: view.request || null };
+  }
+
+  function lobbyInfo() {
+    const o = view.online;
+    return {
+      host: { name: playerName(0) },
+      guest: o.guest && o.guestConnected ? { name: o.guest.name } : null, // never send the seat pass
+      summary: SIDE_SUMMARY[settings.sides] || '',
+    };
+  }
+
+  // Called after every render: the room creator shares the state and saves the game.
+  function afterRender() {
+    if (!isHost() || view.online.status === 'creating') return;
+    Net.send(snapshot());
+    if (view.game && view.screen !== 'lobby') {
+      const o = view.online;
+      writeSaved(HOSTED, { code: o.code, screen: view.screen, toss: view.toss, game: view.game, guest: o.guest, request: view.request || null });
+    }
+  }
+
+  /* room creator */
+
+  function createRoom() {
+    if (!Net.available()) { view.notice = 'Online play needs an internet connection.'; render(); return; }
+    saveSettings();
+    forget(HOSTED);
+    view.resume = null;
+    view.game = null;
+    view.request = null;
+    const o = view.online = { role: 'host', me: 0, code: '', status: 'creating', guest: null, guestConnected: false };
+    go('lobby');
+    Net.host(onHostEvent)
+      .then(code => { o.code = code; o.status = 'waiting'; render(); })
+      .catch(err => leaveRoom(err.message));
+  }
+
+  function resumeHost() {
+    const saved = readSaved(HOSTED);
+    view.resume = null;
+    if (!saved) { render(); return; }
+    if (!Net.available()) { view.notice = 'Online play needs an internet connection.'; render(); return; }
+    view.game = saved.game;
+    view.toss = saved.toss;
+    view.request = saved.request || null;
+    if (view.toss && view.toss.call) view.toss.done = true;
+    view.seenPly = view.game.history.length;
+    view.cpuKey = '';
+    view.notice = null;
+    const o = view.online = { role: 'host', me: 0, code: saved.code, status: 'creating', resuming: true, guest: saved.guest, guestConnected: false };
+    go('lobby');
+    Net.host(onHostEvent, { code: saved.code })
+      .then(code => {
+        o.status = 'ready';
+        o.resuming = false;
+        o.code = code;
+        go(saved.screen);
+        if (!o.guestConnected) guestAway();
+        if (code !== saved.code) {
+          view.notice = `Room ${saved.code} was still busy, so your game reopened as room ${code}. Send your friend the new code.`;
+        }
+        render();
+      })
+      .catch(err => leaveRoom(err.message, { keep: true }));
+  }
+
+  const cleanName = s => String(s || '').trim().slice(0, 16) || 'Player 2';
+
+  function onHostEvent(ev) {
+    const o = view.online;
+    if (!o) return;
+    if (ev.type === 'message' && ev.msg.t === 'hello') {
+      const msg = ev.msg, token = String(msg.token || '');
+      if (view.game) {
+        // game under way: the seat is reserved for the device holding the seat pass,
+        // unless the room creator has opened it to anyone
+        const p = view.game.players[1];
+        const owner = !!o.guest && token === o.guest.token;
+        if (!owner && !o.seatOpen) {
+          Net.reject(ev.from, { t: 'reserved', name: o.guest ? o.guest.name : '' });
+          return;
+        }
+        Net.accept(ev.from);
+        o.guestConnected = true;
+        o.seatOpen = false;
+        if (!owner) {
+          const name = cleanName(msg.name);
+          p.name = name;
+          o.guest = { name, token };
+        }
+        guestBack(!owner);
+      } else {
+        // still in the lobby: anyone can take the empty seat
+        if (o.guest && o.guestConnected && token !== o.guest.token) {
+          Net.reject(ev.from, { t: 'full' });
+          return;
+        }
+        Net.accept(ev.from);
+        o.guest = { name: cleanName(msg.name), token };
+        o.guestConnected = true;
+      }
+      render();
+    } else if (ev.type === 'message' && ev.msg.t === 'act' && ev.active) {
+      guestAct(ev.msg.d || {});
+    } else if (ev.type === 'message' && ev.msg.t === 'bye' && ev.active) {
+      o.leftOnPurpose = true; // their connection closes right after this
+    } else if (ev.type === 'left') {
+      const onPurpose = o.leftOnPurpose;
+      o.leftOnPurpose = false;
+      o.guestConnected = false;
+      if (!view.game) o.guest = null; // lobby: free the seat
+      else if (onPurpose) guestQuit();
+      else guestAway();
+      render();
+    } else if (ev.type === 'error') {
+      view.notice = ev.message;
+      render();
+    }
+  }
+
+  // The joiner's moves and answers, checked here before anything changes.
+  function guestAct(d) {
+    const g = view.game;
+    if (!g || g.players[1].isCPU) return;
+    if (d.type === 'move' && view.screen === 'game' && turnPlayer(g) === 1) {
+      if (E.move(g, Number(d.from), Number(d.to))) afterChange();
+    } else if (d.type === 'pick' && view.screen === 'toss') {
+      pickSide(1, d.side === 'D' ? 'D' : 'A');
+    } else if (d.type === 'resign' && view.screen === 'game' && !g.winner) {
+      E.resign(g, g.players[1].side);
+      afterChange();
+    } else if (d.type === 'request' && view.screen === 'game' && !view.request && ['undo', 'restart'].includes(d.kind)) {
+      if (d.kind === 'undo' && !g.history.some(h => E.playerOf(g, h.side) === 1)) return;
+      view.request = { type: d.kind, from: 1 };
+      render();
+    } else if (d.type === 'answer' && view.request && view.request.from === 0) {
+      answerRequest(!!d.accept);
+    } else if (d.type === 'cancel' && view.request && view.request.from === 1) {
+      view.request = null;
+      render();
+    }
+  }
+
+  // The joiner pressed Leave: the computer takes over at once and the seat opens to anyone.
+  function guestQuit() {
+    const o = view.online, g = view.game, p = g.players[1];
+    stopTakeover();
+    o.seatOpen = true;
+    view.request = null;
+    if (!g.winner && !p.isCPU) {
+      p.isCPU = true;
+      p.standIn = true;
+      view.cpuKey = '';
+    }
+    view.notice = `${p.name} left the game${g.winner ? '' : ', so the computer is playing for them'}. Anyone with code ${o.code} can take the seat.`;
+  }
+
+  function openSeat() {
+    const o = view.online, p = view.game.players[1];
+    o.seatOpen = true;
+    view.notice = `Seat 2 is open. Anyone with code ${o.code} can join and take over ${p.name}'s side.`;
+    render();
+  }
+
+  const secondsLeft = () => Math.max(0, Math.ceil((view.online.takeoverAt - Date.now()) / 1000));
+
+  // The joiner dropped out mid-game: count down, then let the computer play their side.
+  function guestAway() {
+    const o = view.online, p = view.game.players[1];
+    stopTakeover();
+    if (p.isCPU || view.game.winner || view.screen !== 'game') {
+      view.notice = `${p.name} left. They can rejoin with code ${o.code}${p.isCPU ? '; until then the computer plays for them' : ''}.`;
+      return;
+    }
+    o.takeoverAt = Date.now() + TAKEOVER_SECONDS * 1000;
+    view.notice = () => `<b>${esc(p.name)}</b> lost connection. The computer takes over in <b data-countdown>${secondsLeft()}</b>s unless they rejoin with code <b>${o.code}</b>.`;
+    o.takeover = setInterval(() => {
+      const el = document.querySelector('[data-countdown]');
+      if (el) el.textContent = secondsLeft();
+      if (secondsLeft() <= 0) { stopTakeover(); computerTakesOver(); }
+    }, 1000);
+  }
+
+  function stopTakeover() {
+    const o = view.online;
+    if (o && o.takeover) { clearInterval(o.takeover); o.takeover = null; }
+  }
+
+  function computerTakesOver() {
+    const o = view.online, g = view.game;
+    if (!o || !g || o.guestConnected) return;
+    const p = g.players[1];
+    p.isCPU = true;
+    p.standIn = true;
+    view.cpuKey = '';
+    if (view.request) answerRequest(true); // the computer agrees to whatever was asked
+    view.notice = `The computer is now playing for ${p.name}. If they rejoin with code ${o.code}, they get their side back.`;
+    render();
+  }
+
+  function guestBack(newcomer) {
+    const p = view.game.players[1];
+    stopTakeover();
+    if (p.standIn) { p.isCPU = false; p.standIn = false; }
+    const msg = newcomer ? `${p.name} joined and takes over seat 2.` : `${p.name} is back.`;
+    view.notice = msg;
+    setTimeout(() => { if (view.notice === msg) { view.notice = null; render(); } }, 4000);
+  }
+
+  /* undo / restart requests: the other player has to agree */
+
+  function requestFromMe(type) {
+    const g = view.game, me = view.online.me;
+    if (view.request) return;
+    if (isGuest()) {
+      Net.send({ t: 'act', d: { type: 'request', kind: type } });
+      view.request = { type, from: me };
+      render();
+      return;
+    }
+    view.request = { type, from: me };
+    if (g.players[1].isCPU) { answerRequest(true); return; }
+    render();
+  }
+
+  function answerRequest(accept) {
+    const r = view.request;
+    if (!r) return;
+    view.request = null;
+    const g = view.game, other = g.players[1 - r.from].name;
+    if (accept) {
+      if (r.type === 'undo') takeBack(g, r.from);
+      else resetBoard(false);
+      if (!g.players[1].isCPU) view.notice = r.type === 'undo' ? 'The move was taken back.' : 'The battle was restarted.';
+    } else {
+      view.notice = `${other} declined to ${r.type === 'undo' ? 'take back the move' : 'restart'}.`;
+    }
+    render();
+  }
+
+  function requestBanner(g) {
+    const r = view.request;
+    if (!r || !view.online) return '';
+    if (r.from === view.online.me) {
+      return `<div class="request-bar">Waiting for <b>${esc(g.players[1 - r.from].name)}</b> to agree to ${r.type === 'undo' ? 'take back your move' : 'a restart'}<span class="dots"><i>.</i><i>.</i><i>.</i></span>
+        <button class="btn small ghost" data-action="cancel-request">Cancel</button></div>`;
+    }
+    const what = r.type === 'undo' ? 'take back their last move' : 'restart the battle';
+    return `<div class="request-bar ask"><span><b>${esc(g.players[r.from].name)}</b> asks to ${what}.</span>
+      <button class="btn small primary" data-action="answer" data-value="yes">Allow</button>
+      <button class="btn small" data-action="answer" data-value="no">Decline</button></div>`;
+  }
+
+  // Room creator only: who can take seat 2 while its player is away.
+  function seatStatus(i) {
+    const o = view.online;
+    if (i !== 1 || !isHost() || o.guestConnected || !view.game) return '';
+    const name = view.game.players[1].name;
+    return `<div class="seat-status">${o.seatOpen
+      ? `Seat open: anyone with code <b>${o.code}</b> can join`
+      : `Waiting for ${esc(name)} to rejoin <button class="btn ghost small" data-action="open-seat">Let someone else join</button>`}</div>`;
+  }
+
+  /* joiner */
+
+  function joinBox() {
+    return `<div class="join-box">
+      <div class="join-text"><b>Joining a friend's room?</b>
+        <small class="muted">Type their ${Net.CODE_LENGTH}-letter code. They choose how sides are decided; you bring your own name.</small></div>
+      <div class="join-row">
+        <input class="code-input" data-code maxlength="${Net.CODE_LENGTH}" placeholder="ABCDE" value="${esc(view.joinCode)}"
+          autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code">
+        <button class="btn" data-action="join">Join room</button>
+      </div>
+    </div>`;
+  }
+
+  function joinRoom() {
+    const code = Net.normaliseCode(view.joinCode);
+    if (code.length !== Net.CODE_LENGTH) { view.notice = `Room codes are ${Net.CODE_LENGTH} letters.`; render(); return; }
+    if (!Net.available()) { view.notice = 'Online play needs an internet connection.'; render(); return; }
+    saveSettings();
+    const prev = readSaved(JOINED);
+    const rejoining = !!prev && prev.code === code;
+    const o = view.online = { role: 'guest', me: 1, code, token: rejoining ? prev.token : Net.makeToken(), status: 'connecting', lobby: null };
+    view.notice = null;
+    view.rejoin = null;
+    view.game = null;
+    view.request = null;
+    go('lobby');
+    connectGuest(o).catch(err => leaveRoom(err.message, { keep: rejoining }));
+  }
+
+  function connectGuest(o) {
+    return Net.join(o.code, onGuestEvent).then(() => {
+      if (view.online !== o) { Net.close(); return; }
+      o.status = 'joined';
+      writeSaved(JOINED, { code: o.code, token: o.token });
+      // an unchanged default name would show as a second "Player 1"
+      const mine = (settings.names[0] || '').trim();
+      const name = mine && mine !== DEFAULTS.names[0] ? mine : DEFAULTS.names[1];
+      Net.send({ t: 'hello', name, token: o.token });
+      render();
+    });
+  }
+
+  // Connection lost: keep retrying quietly for about 2 minutes.
+  function guestReconnect(reason) {
+    const o = view.online;
+    if (!o || o.reconnecting) return;
+    o.reconnecting = true;
+    let tries = 0;
+    view.notice = () => `${esc(reason)} Reconnecting<span class="dots"><i>.</i><i>.</i><i>.</i></span>`;
+    render();
+    const attempt = () => {
+      if (view.online !== o) return;
+      tries++;
+      connectGuest(o)
+        .then(() => {
+          if (view.online !== o) return;
+          o.reconnecting = false;
+          view.notice = null;
+          render();
+        })
+        .catch(() => {
+          if (view.online !== o) return;
+          if (tries >= RECONNECT_TRIES) leaveRoom(`Couldn't reconnect to room ${o.code}. You can rejoin from this screen once it's back.`, { keep: true });
+          else o.retry = setTimeout(attempt, RECONNECT_GAP);
+        });
+    };
+    o.retry = setTimeout(attempt, 1000);
+  }
+
+  function onGuestEvent(ev) {
+    const o = view.online;
+    if (!o) return;
+    if (ev.type === 'message') {
+      const msg = ev.msg;
+      if (msg.t === 'state') {
+        const moved = !view.game || !msg.game || msg.game.history.length !== view.game.history.length;
+        view.game = msg.game;
+        view.toss = msg.toss;
+        view.request = msg.request;
+        o.lobby = msg.lobby;
+        if (moved) view.selected = null;
+        if (view.game && view.game.history.length < view.seenPly) view.seenPly = view.game.history.length;
+        writeSaved(JOINED, { code: o.code, token: o.token }); // keep the seat pass fresh
+        if (msg.screen !== view.screen) { view.screen = msg.screen; window.scrollTo(0, 0); }
+        render();
+      } else if (msg.t === 'full') {
+        leaveRoom('That room already has two players.');
+      } else if (msg.t === 'reserved') {
+        leaveRoom(`That game is already under way, and seat 2 is saved for ${msg.name || 'the other player'}'s device. If that's you on a different device or browser, ask the room creator to tap "Let someone else join".`);
+      } else if (msg.t === 'closed') {
+        leaveRoom('The room creator left, so the room is closed.');
+      } else if (msg.t === 'away') {
+        guestReconnect('The room creator dropped out.');
+      }
+    } else if (ev.type === 'left') {
+      guestReconnect('Lost connection to the room.');
+    } else if (ev.type === 'error') {
+      view.notice = ev.message;
+      render();
+    }
+  }
+
+  /* both */
+
+  // opts.keep: keep the saved game / seat pass so it can be resumed later
+  function leaveRoom(message, opts) {
+    const o = view.online, keep = !!(opts && opts.keep);
+    if (o) {
+      clearTimeout(o.retry);
+      stopTakeover();
+      if (o.role === 'host' && !keep) { Net.send({ t: 'closed' }); forget(HOSTED); }
+      if (o.role === 'guest' && !keep) { Net.send({ t: 'bye' }); forget(JOINED); }
+    }
+    Net.close(o ? 300 : 0); // give the goodbye time to reach the other player
+    view.online = null;
+    view.request = null;
+    view.notice = message || null;
+    view.resume = readSaved(HOSTED);
+    view.rejoin = readSaved(JOINED);
+    go('setup');
+  }
+
+  function resumeCards() {
+    const cards = [];
+    const r = view.resume, j = view.rejoin;
+    if (r) {
+      const other = r.game.players[1].name;
+      cards.push(`<div class="resume-card">
+        <div class="join-text"><b>Your online game is saved</b>
+          <small class="muted">Room ${esc(r.code)} · vs ${esc(other)} · ${r.game.winner ? 'finished' : `move ${Math.floor(r.game.history.length / 2) + 1}`}</small></div>
+        <div class="join-row">
+          <button class="btn primary" data-action="resume-host">Resume game</button>
+          <button class="btn ghost small" data-action="discard-host">Discard</button>
+        </div>
+      </div>`);
+    }
+    if (j) {
+      cards.push(`<div class="resume-card">
+        <div class="join-text"><b>Rejoin your online game?</b>
+          <small class="muted">Room ${esc(j.code)}. Your seat is saved for you.</small></div>
+        <div class="join-row">
+          <button class="btn primary" data-action="rejoin">Rejoin</button>
+          <button class="btn ghost small" data-action="dismiss-rejoin">Dismiss</button>
+        </div>
+      </div>`);
+    }
+    return cards.join('');
+  }
+
+  function renderLobby() {
+    const o = view.online, host = o.role === 'host';
+    let body;
+    if (o.status === 'creating' || o.status === 'connecting' || (!host && !o.lobby)) {
+      body = `<p class="toss-prompt">${o.resuming ? `Reopening room <b>${o.code}</b>` : host ? 'Creating your room' : `Joining room <b>${o.code}</b>`}<span class="dots"><i>.</i><i>.</i><i>.</i></span></p>`;
+    } else {
+      const info = host ? lobbyInfo() : o.lobby;
+      const seat = (p, i) => `<li class="p-${i}">
+        <span class="seat-name">${p ? esc(p.name) : `Waiting for your friend<span class="dots"><i>.</i><i>.</i><i>.</i></span>`}</span>
+        <small class="muted">${p ? (i === 0 ? 'room creator' : 'joined') : 'not joined yet'}${i === o.me ? ' · you' : ''}</small></li>`;
+      body = `<p class="muted">${host ? 'Share this code with your friend' : 'You\'re in room'}</p>
+        <div class="room-code" aria-label="Room code ${o.code}">${o.code.split('').map(c => `<span>${c}</span>`).join('')}</div>
+        ${host ? '<button class="btn small" data-action="copy-code">Copy code</button>' : ''}
+        <ul class="seats">${seat(info.host, 0)}${seat(info.guest, 1)}</ul>
+        <p class="muted">${esc(info.summary)}</p>
+        ${host
+          ? `<button class="btn primary big" data-action="online-start"${info.guest ? '' : ' disabled'}>${settings.sides === 'toss' ? 'Go to the rune toss →' : 'Begin the battle →'}</button>`
+          : waitingFor(info.host.name)}`;
+    }
+    return `<section class="screen lobby">
+      <div class="panel toss-panel">
+        <h2 class="panel-title">${host ? 'Your room' : 'Online room'}</h2>
+        ${themeSwitch()}
+        ${body}
+        <button class="btn small ghost" data-action="leave">Leave room</button>
+      </div>
+    </section>`;
+  }
+
+  function onlineAction(action, el) {
+    switch (action) {
+      case 'create-room': createRoom(); break;
+      case 'join': joinRoom(); break;
+      case 'leave': leaveRoom(); break;
+      case 'resume-host': resumeHost(); break;
+      case 'open-seat': if (isHost()) openSeat(); break;
+      case 'discard-host': forget(HOSTED); view.resume = null; render(); break;
+      case 'rejoin': view.joinCode = view.rejoin.code; joinRoom(); break;
+      case 'dismiss-rejoin': forget(JOINED); view.rejoin = null; render(); break;
+      case 'copy-code':
+        if (navigator.clipboard) navigator.clipboard.writeText(view.online.code).then(() => { el.textContent = 'Copied!'; }, () => {});
+        break;
+      case 'answer':
+        if (isGuest()) { Net.send({ t: 'act', d: { type: 'answer', accept: el.dataset.value === 'yes' } }); view.request = null; render(); }
+        else if (view.request && view.request.from === 1) answerRequest(el.dataset.value === 'yes');
+        break;
+      case 'cancel-request':
+        if (isGuest()) Net.send({ t: 'act', d: { type: 'cancel' } });
+        view.request = null;
+        render();
+        break;
+    }
+  }
+
+  app.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.dataset.code !== undefined) joinRoom();
+  });
+
+  // If the room creator reloads or closes the tab, the game is saved and can be
+  // resumed, so tell the other player to wait and keep reconnecting.
+  window.addEventListener('beforeunload', () => { if (isHost()) Net.send({ t: 'away' }); });
+
+  view.resume = readSaved(HOSTED);
+  view.rejoin = readSaved(JOINED);
+
   /* ---------- render & events ---------- */
 
   function render() {
-    const screens = { setup: renderSetup, toss: renderToss, game: renderGame };
-    if (typeof renderLobby === 'function') screens.lobby = renderLobby;
+    const screens = { setup: renderSetup, lobby: renderLobby, toss: renderToss, game: renderGame };
     const entering = view.screen !== view.renderedScreen;
     view.renderedScreen = view.screen;
     document.documentElement.dataset.screen = view.screen;
@@ -661,7 +1177,7 @@
     app.innerHTML = notice + screens[view.screen]();
     if (entering) app.querySelector('.screen').classList.add('enter');
     if (view.screen === 'game') { animateLastMove(); scheduleCPU(); }
-    if (typeof afterRender === 'function') afterRender();
+    afterRender();
   }
 
   app.addEventListener('click', e => {
@@ -699,7 +1215,7 @@
         break;
       case 'quit':
         if (!window.confirm(view.online ? 'Leave this online game? It ends for both players.' : 'Quit this battle? The game will be lost.')) break;
-        if (view.online && typeof leaveRoom === 'function') leaveRoom(); else go('setup');
+        if (view.online) leaveRoom(); else go('setup');
         break;
       case 'undo':
         undo();
@@ -730,7 +1246,7 @@
         view.notice = null; render();
         break;
       default:
-        if (typeof onlineAction === 'function') onlineAction(d.action, el);
+        onlineAction(d.action, el);
     }
   });
 
