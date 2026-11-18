@@ -1,0 +1,76 @@
+/*
+ * Runestone: a pale speckled limestone slab with engraved lines, cupped
+ * attacker squares and knots carved in the corners; black basalt attackers
+ * against ivory defenders.
+ * Design reference: ref3.jpg
+ */
+[data-theme="runestone"] {
+  color-scheme: light;
+  --font-display: 'Cinzel', Georgia, serif;
+  --display-weight: 600;
+  --display-tracking: .1em;
+
+  --page-bg: radial-gradient(ellipse at 50% 20%, #fbfaf7 0%, #ecebe6 55%, #d9d7cf 100%);
+  --text: #2a2723;
+  --muted: rgba(42, 39, 35, .62);
+  --accent: #5b5348;
+  --accent-ink: #f7f4ec;
+  --heading: #34302a;
+  --step-color: #6e6455;
+  --a-color: #23211f;
+  --d-color: #9b8452;
+
+  --panel-bg:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.25  0 0 0 0 0.22  0 0 0 0 0.18  0 0 0 5 -3.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E"),
+    linear-gradient(160deg, #f8f5ec, #eee9dc);
+  --panel-border: 1px solid rgba(90, 80, 65, .3);
+  --panel-shadow: 0 1px 0 #fff inset, 0 12px 26px rgba(60, 50, 35, .16);
+  --panel-radius: 10px;
+  --field-line: rgba(90, 80, 65, .18);
+  --chip-bg: rgba(255, 255, 255, .55);
+  --chip-border: rgba(90, 80, 65, .32);
+  --chip-sel-bg: rgba(91, 83, 72, .12);
+  --input-bg: rgba(255, 255, 255, .7);
+  --option-bg: #f8f5ec;
+
+  --stone:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 0.22  0 0 0 0 0.19  0 0 0 0 0.15  0 0 0 6 -4.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.5  0 0 0 0 0.4  0 0 0 0.35 -0.05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  --frame-bg: var(--stone), linear-gradient(150deg, #efe9da, #e2dac6);
+  --frame-pad: 6%;
+  --frame-radius: 4px;
+  --frame-shadow: 0 1px 0 #fffdf6 inset, 0 -2px 0 rgba(120, 105, 80, .3) inset, 0 6px 0 #c9bfa7, 0 7px 0 #b3a88f, 0 26px 40px rgba(60, 50, 30, .3);
+  --frame-text: #6f6554;
+  --band-in: 1.3%;
+  --band-w: 1.2%;
+  --band-bg: transparent;
+  --band-shadow: 0 0 0 1.5px rgba(80, 70, 55, .55), 1px 1px 0 2px rgba(255, 255, 255, .7);
+  --band-inner-shadow: 0 0 0 1.5px rgba(80, 70, 55, .55), 1px 1px 0 1.5px rgba(255, 255, 255, .7);
+
+  --grid-bg: var(--stone), linear-gradient(150deg, #f1ebdc, #e7dfcb);
+  --line: rgba(86, 78, 64, .72);
+  --line-w: 1.6px;
+  --mark: rgba(70, 62, 50, .8);
+  --mark-w: 4;
+  --camp: rgba(86, 78, 64, .55);
+  --camp-inset: 10%;
+  --target: #6b5a3c;
+  --strike: #b3392b;
+  --select: #4a4035;
+  --last: rgba(120, 100, 60, .14);
+  --danger: #b3392b;
+
+  --a-body: #2b2927; --a-hi: #57534e; --a-lo: #121110; --a-face: #45423e; --a-shield: #2f2d2a; --a-boss: #57534e; --a-ink: #050505;
+  --d-body: #ece4cf; --d-hi: #fffaee; --d-lo: #c6b996; --d-face: #e8dfc7; --d-helm: #e0d5b9; --d-shield: #efe8d5; --d-boss: #cdbf9d; --d-ink: #84765a;
+  --k-body: #eee6d1; --k-hi: #fffbf1; --k-lo: #c4b693; --k-face: #e9e0c9; --k-beard: #e5dbc1; --k-crown: #e7dcbe; --k-shield: #f0e9d7; --k-boss: #bfae86; --k-ink: #7a6c50;
+  --piece-cast: rgba(40, 30, 10, .28);
+  --piece-filter: drop-shadow(0 3px 2.5px rgba(40, 30, 10, .35));
+}
+
+/* engraved look: each groove has a light edge below it */
+[data-theme="runestone"] .grid { box-shadow: 1px 1px 0 rgba(255, 255, 255, .8); }
+[data-theme="runestone"] .cell { box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .55); }
+[data-theme="runestone"] .cell.last-from, [data-theme="runestone"] .cell.last-to { box-shadow: inset 0 0 0 999px var(--last); }
+[data-theme="runestone"] .cell.camp::before { box-shadow: inset 1px 2px 4px rgba(60, 50, 30, .3), 1px 1px 0 rgba(255, 255, 255, .7); border-width: 1px; }
+[data-theme="runestone"] .logo { color: #3a352e; text-shadow: 0 1px 0 #fff, 0 -1px 0 rgba(0, 0, 0, .25); }
+[data-theme="runestone"] .mark-lines { filter: url(#carve); }

@@ -14,6 +14,9 @@
   // Each theme is one stylesheet in css/themes/, scoped to [data-theme="id"].
   const THEMES = [
     { id: 'oak', name: 'Carved Oak' },
+    { id: 'linen', name: 'Linen & Knot' },
+    { id: 'runestone', name: 'Runestone' },
+    { id: 'saga', name: 'Saga' },
   ];
 
   const LEVELS = [

@@ -15,6 +15,8 @@
   --muted: rgba(241, 231, 214, .66);
   --accent: #d9a55b;
   --accent-ink: #20160d;
+  --heading: var(--text);
+  --step-color: var(--accent);
   --a-color: #74b3a6;   /* attackers in text and highlights */
   --d-color: #eadcc0;   /* defenders */
 
@@ -45,6 +47,8 @@
   --mark: rgba(40, 20, 8, .85);
   --mark-w: 5;
   --camp: rgba(40, 20, 8, .35);
+  --camp-inset: 14%;
+  --camp-radius: 50%;
   --target: #e9b356;
   --strike: #e0523f;
   --select: #ffd88a;
@@ -150,6 +154,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   font-weight: var(--display-weight);
   letter-spacing: var(--display-tracking);
 }
+.panel-title, .logo, .step, .bar-logo, .result-title, .panel-sub { color: var(--heading); }
 
 /* ---------- setup ---------- */
 
@@ -165,8 +170,8 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .step .num {
   display: inline-grid; place-items: center;
   width: 32px; height: 32px; flex: none;
-  border: 1.5px solid var(--accent); border-radius: 50%;
-  font-size: .95rem; color: var(--accent);
+  border: 1.5px solid var(--step-color); border-radius: 50%;
+  font-size: .95rem; color: var(--step-color);
 }
 
 .players { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -284,13 +289,17 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .grid.mini > .cell:nth-last-child(-n + 4) { border-bottom: 0; }
 
 .cell.camp::before {
-  content: ''; position: absolute; inset: 14%;
-  border: 1.5px solid var(--camp); border-radius: 50%;
+  content: ''; position: absolute; inset: var(--camp-inset);
+  border: 1.5px solid var(--camp); border-radius: var(--camp-radius);
   pointer-events: none;
 }
 .cell .mark { position: absolute; inset: 8%; width: 84%; height: 84%; pointer-events: none; }
 .mark-lines { stroke: var(--mark); stroke-width: var(--mark-w); stroke-linecap: round; stroke-linejoin: round; }
-.cell .mark-rune, .mk .mark-rune { display: none; }
+.mark-rune { display: none; }
+[data-theme="saga"] .mark-knot { display: none; }
+[data-theme="saga"] .mark-rune { display: block; }
+.tp:not([data-theme="saga"]) .mark-rune { display: none; }
+.tp:not([data-theme="saga"]) .mark-knot { display: block; }
 
 .cell.last-from, .cell.last-to { box-shadow: inset 0 0 0 999px var(--last); }
 

@@ -1,0 +1,87 @@
+/*
+ * Linen & Knot: a printed canvas cloth board with bold black lines, a chain
+ * knotwork border and decorated attacker squares; dark carved wood attackers
+ * and ivory defenders.
+ * Design reference: ref2.jpg
+ */
+[data-theme="linen"] {
+  color-scheme: light;
+  --font-display: 'Uncial Antiqua', Georgia, serif;
+  --display-weight: 400;
+  --display-tracking: .03em;
+
+  --page-bg:
+    repeating-linear-gradient(0deg, rgba(120, 105, 80, .045) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(120, 105, 80, .045) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #f6f4ef, #e9e5dc);
+  --text: #1d1915;
+  --muted: rgba(29, 25, 21, .62);
+  --accent: #1d1915;
+  --accent-ink: #f7f3ea;
+  --heading: #1d1915;
+  --step-color: #1d1915;
+  --a-color: #4a2f24;
+  --d-color: #a07a3a;
+
+  --panel-bg: rgba(252, 250, 245, .94);
+  --panel-border: 2px solid #1d1915;
+  --panel-shadow: 0 10px 24px rgba(40, 30, 15, .12);
+  --panel-radius: 6px;
+  --field-line: rgba(29, 25, 21, .16);
+  --chip-bg: #fffdf8;
+  --chip-border: rgba(29, 25, 21, .35);
+  --chip-sel-bg: #efe8d8;
+  --input-bg: #fffdf8;
+  --option-bg: #fffdf8;
+  --btn-radius: 6px;
+
+  --frame-bg:
+    repeating-linear-gradient(0deg, rgba(110, 95, 70, .07) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(110, 95, 70, .07) 0 1px, transparent 1px 3px),
+    #f5f1e7;
+  --frame-pad: 6.5%;
+  --frame-radius: 3px;
+  --frame-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 20px 40px rgba(50, 40, 20, .2), 0 3px 6px rgba(50, 40, 20, .12);
+  --frame-text: #1d1915;
+  --band-in: 1.1%;
+  --band-w: 2.6%;
+  --band-bg:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke='%231d1915' stroke-width='2.2'%3E%3Cellipse cx='12' cy='12' rx='9' ry='5.5'/%3E%3Cellipse cx='12' cy='12' rx='5.5' ry='9'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/g%3E%3C/svg%3E") center / 16px 16px,
+    #fbf9f3;
+  --band-shadow: 0 0 0 2px #1d1915, 0 0 0 4px #fbf9f3, 0 0 0 5.5px #1d1915;
+  --band-inner-shadow: 0 0 0 2px #1d1915;
+
+  --grid-bg:
+    repeating-linear-gradient(0deg, rgba(110, 95, 70, .06) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(110, 95, 70, .06) 0 1px, transparent 1px 3px),
+    #f7f3e9;
+  --line: #1d1915;
+  --line-w: 2.4px;
+  --mark: #1d1915;
+  --mark-w: 4.5;
+  --camp: #1d1915;
+  --camp-inset: 9%;
+  --camp-radius: 3px;
+  --target: #b8862e;
+  --strike: #c2362a;
+  --select: #b8862e;
+  --last: rgba(184, 134, 46, .16);
+  --danger: #c2362a;
+
+  --a-body: #3d2a23; --a-hi: #6a4c40; --a-lo: #1f1410; --a-face: #5b4035; --a-shield: #432e26; --a-boss: #6a4c40; --a-ink: #150c09;
+  --d-body: #efe3c3; --d-hi: #fff9e8; --d-lo: #cdb382; --d-face: #ecdcb5; --d-helm: #e5d3a8; --d-shield: #f1e6c9; --d-boss: #d8c08d; --d-ink: #85642e;
+  --k-body: #f0e4c4; --k-hi: #fffaea; --k-lo: #cbb07c; --k-face: #ecdcb6; --k-beard: #e9d7ab; --k-crown: #e6cf93; --k-shield: #f2e7cb; --k-boss: #c9a35a; --k-ink: #7c5c28;
+  --piece-cast: rgba(30, 20, 5, .22);
+  --piece-filter: drop-shadow(0 3px 3px rgba(30, 20, 5, .3));
+}
+
+/* ref2 frames each attacker start square with a second, inner outline */
+[data-theme="linen"] .cell.camp::after { content: ''; position: absolute; inset: 16%; border: 1px solid #1d1915; border-radius: 2px; pointer-events: none; }
+[data-theme="linen"] .cell.camp.target::after, [data-theme="linen"] .cell.camp.selected::after { inset: auto; border-radius: 50%; }
+[data-theme="linen"] .cell.camp.target::after { left: 26%; right: 26%; top: 37%; height: 26%; border: 2.5px solid var(--target); }
+[data-theme="linen"] .cell.camp.target.strike::after { border-color: var(--strike); left: 18%; right: 18%; top: 33%; height: 34%; }
+[data-theme="linen"] .cell.camp.selected::after { left: 12%; right: 12%; bottom: 4%; height: 26%; border: 2.5px solid var(--select); }
+[data-theme="linen"] .logo { text-transform: none; }
+[data-theme="linen"] .btn.primary:hover:not(:disabled) { filter: none; background: #3a332b; }
+[data-theme="linen"] .status-line.s-D { box-shadow: 0 0 0 2px #c9a35a inset; }
+[data-theme="linen"] .bar-logo { text-transform: none; }

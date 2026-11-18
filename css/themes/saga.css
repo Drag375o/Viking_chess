@@ -1,0 +1,77 @@
+/*
+ * Saga: the flat line-art look of an illustrated rule sheet. Teal grid and
+ * rune marks on white paper, terracotta-outlined defenders and black
+ * attackers drawn in white line.
+ * Design reference: ref4.jpg
+ */
+[data-theme="saga"] {
+  color-scheme: light;
+  --font-display: 'Germania One', 'Cinzel', serif;
+  --display-weight: 400;
+  --display-tracking: .06em;
+
+  --page-bg: #fbf9f5;
+  --text: #2c2b29;
+  --muted: rgba(44, 43, 41, .62);
+  --accent: #c6744b;
+  --accent-ink: #fffaf5;
+  --heading: #5a9b93;
+  --step-color: #5a9b93;
+  --a-color: #222120;
+  --d-color: #c6744b;
+
+  --panel-bg: #ffffff;
+  --panel-border: 2px solid #cfe3e0;
+  --panel-shadow: none;
+  --panel-radius: 4px;
+  --field-line: #e1eeec;
+  --chip-bg: #ffffff;
+  --chip-border: #b9d6d2;
+  --chip-sel-bg: #fbeee6;
+  --input-bg: #ffffff;
+  --option-bg: #ffffff;
+  --btn-radius: 4px;
+
+  --frame-bg: #ffffff;
+  --frame-pad: 6%;
+  --frame-radius: 2px;
+  --frame-shadow: 0 0 0 2px #5a9b93, 0 0 0 7px #ffffff, 0 0 0 8.5px #5a9b93;
+  --frame-text: #5a9b93;
+  --band-in: 1.2%;
+  --band-w: 2.2%;
+  --band-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cg fill='none' stroke='%235a9b93' stroke-width='2'%3E%3Cpath d='M12 3 L21 12 L12 21 L3 12 Z'/%3E%3Cpath d='M12 8 L16 12 L12 16 L8 12 Z'/%3E%3C/g%3E%3C/svg%3E") center / 15px 15px, #ffffff;
+  --band-shadow: none;
+  --band-inner-shadow: 0 0 0 1.5px #5a9b93;
+
+  --grid-bg: #fdfbf7;
+  --line: #5a9b93;
+  --line-w: 2px;
+  --mark: #5a9b93;
+  --mark-w: 6;
+  --camp: rgba(90, 155, 147, .45);
+  --camp-inset: 30%;
+  --target: #c6744b;
+  --strike: #c6744b;
+  --select: #c6744b;
+  --last: rgba(90, 155, 147, .12);
+  --danger: #d0483a;
+
+  /* flat colours: no shading gradient */
+  --a-body: #232221; --a-hi: #232221; --a-lo: #232221; --a-face: #232221; --a-shield: #232221; --a-boss: #232221; --a-ink: #f6f1ea;
+  --d-body: #fdf3ea; --d-hi: #fdf3ea; --d-lo: #f8e3d3; --d-face: #fdf3ea; --d-helm: #f8e3d3; --d-shield: #fdf3ea; --d-boss: #f8e3d3; --d-ink: #c6744b;
+  --k-body: #fdf1e6; --k-hi: #fdf1e6; --k-lo: #f6dcc8; --k-face: #fdf1e6; --k-beard: #fbe9da; --k-crown: #f6dcc8; --k-shield: #fdf1e6; --k-boss: #c6744b; --k-ink: #b8653d;
+  --piece-line: 2.4px;
+  --piece-cast: rgba(90, 155, 147, .18);
+  --piece-filter: none;
+}
+
+[data-theme="saga"] .logo { font-size: clamp(3rem, 8vw, 5.2rem); }
+[data-theme="saga"] .runes { color: #c6744b; }
+[data-theme="saga"] .tagline, [data-theme="saga"] .goal, [data-theme="saga"] .credit { font-style: italic; color: #b8653d; }
+[data-theme="saga"] .step .num { border: 0; position: relative; }
+[data-theme="saga"] .step .num::before { content: ''; position: absolute; inset: 5px; border: 2px solid var(--step-color); border-radius: 3px; transform: rotate(45deg); }
+[data-theme="saga"] .cell.camp::before { border-style: dashed; }
+[data-theme="saga"] .side-card.is-turn { box-shadow: 0 0 0 2px var(--side); }
+[data-theme="saga"] .status-line { border-radius: 4px; }
+[data-theme="saga"] .result-card { box-shadow: 0 0 0 6px #fff, 0 0 0 8px #5a9b93; }
+[data-theme="saga"] .coin .face { background: #fff; border: 3px solid #5a9b93; box-shadow: inset 0 0 0 6px #fff, inset 0 0 0 8px #5a9b93; color: #c6744b; text-shadow: none; }
