@@ -1,0 +1,7 @@
+# Design reference photos are downloaded, copyrighted images: never publish them
+Reference/
+
+# Local tooling
+node_modules/
+.netlify/
+tests/out/
