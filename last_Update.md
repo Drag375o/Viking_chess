@@ -1,9 +1,9 @@
 # Hnefatafl: Viking Chess · Last Update
 
-**Current version:** 0.6
+**Current version:** 0.7
 **Last updated:** 2026-11-18
 **Repository:** https://github.com/Drag375o/Viking_chess
-**Live site:** not deployed yet (see [Deployment](#8-deployment))
+**Live site:** https://hnefatafl-viking-chess.netlify.app
 
 This file is the running record of what the game does now and how it got there. Read it before changing anything, and update it after every change.
 
@@ -17,17 +17,18 @@ Follow these steps every time you change the game, however small the change.
 2. **Make your change.** Then run the tests and check the result in a browser (see [Testing](#9-testing)).
 3. **Update Section 2 so it is true again.** Edit or delete statements your change made wrong; don't just add a line below an outdated one.
 4. **Add a new entry at the top of Section 3 (Version history)** and bump the version:
-   - **Minor (0.6 → 0.7):** a new feature, rule change, new board style, or anything a player would notice.
-   - **Patch (0.6 → 0.6.1):** a bug fix, text tweak or style fix.
+   - **Minor (0.7 → 0.8):** a new feature, rule change, new board style, or anything a player would notice.
+   - **Patch (0.7 → 0.7.1):** a bug fix, text tweak or style fix.
 5. **Update the header:** `Current version` and `Last updated` (YYYY-MM-DD).
 6. **Update `README.md`** if players would notice the change.
-7. **Commits and pushes:** push to `main` after each finished feature. Commits are authored by the repository owner only: no `Co-Authored-By` lines or other co-author credits.
-8. **Keep it factual.** Write what the code does. Put unfinished or broken things in [Known limitations](#10-known-limitations).
+7. **If you deployed,** say so in the version entry. A change on disk is not live until it's copied into `Viking_Chess_Online/` and deployed (see [Deployment](#8-deployment)).
+8. **Commits and pushes:** push to `main` after each finished feature. Commits are authored by the repository owner only: no `Co-Authored-By` lines or other co-author credits.
+9. **Keep it factual.** Write what the code does. Put unfinished or broken things in [Known limitations](#10-known-limitations).
 
 ### Version entry template
 
 ```
-### 0.7 · YYYY-MM-DD · Short title
+### 0.8 · YYYY-MM-DD · Short title
 **Changed:** what a player or developer would notice, as short bullets.
 **Files:** the files you touched.
 **Tested:** how you checked it.
@@ -46,7 +47,7 @@ Hnefatafl ("the King's table"), the Viking board game, on the common 11 × 11 bo
 
 ---
 
-## 2. Current state (version 0.6)
+## 2. Current state (version 0.7)
 
 ### 2.1 Game modes
 - **vs Computer:** the player is Player 1; the computer is Player 2 (Easy, Normal or Hard).
@@ -144,7 +145,8 @@ tests/ai.test.js        computer tests (Node, no packages, about a minute)
 docs/screenshots/       README images
 README.md               player and developer guide, original brief at the bottom
 last_Update.md          this file
-.gitignore              excludes Reference/ and local tooling
+.gitignore              excludes Reference/, Viking_Chess_Online/ and local tooling
+Viking_Chess_Online/    (local only, not in git) the deployed copy, linked to Netlify by .netlify/state.json
 ```
 
 - **Load order matters:** classic scripts sharing `window.VC` (not ES modules), so the game works from `file://`. Order: PeerJS, engine, ai, net, pieces, ui.
@@ -167,6 +169,17 @@ last_Update.md          this file
 ## 3. Version history
 
 Newest first. Each version was pushed to `main` when finished.
+
+### 0.7 · 2026-11-18 · Live on Netlify
+**Changed:**
+- New folder `Viking_Chess_Online/` inside the project: a copy of everything except `.git` and `Reference/` (copyrighted photos must not be published). It is the deploy folder and is in `.gitignore`.
+- Created the Netlify site in team Drag375 (account slug `drag375o`). `viking-chess` was taken by someone else, so it was renamed to `hnefatafl-viking-chess`.
+- Visitor protection (`sso_login`) was on by default and showed visitors a Netlify login page (401). It was turned off through the API, as on Auction XI.
+- README: Play now link, live-site and update instructions.
+
+**Files:** `Viking_Chess_Online/` (new, local only), `.gitignore`, `README.md`, `last_Update.md`.
+**Tested:** the live URL, `js/`, `css/` and `docs/` return 200 and `Reference/` returns 404. On the live site: a vs-computer game with toss and undo, and a two-browser online game (join, moves both ways, undo request, drop-out countdown, rejoin, room closed). No page errors.
+**Deployed:** yes.
 
 ### 0.6 · 2026-11-18 · README, screenshots and this file
 **Changed:** README for players and developers (features, rules in detail, options, online play, computer, hosting, tests, structure, customising) with 8 screenshots; the original brief kept at the bottom. Added `last_Update.md`.
@@ -201,7 +214,7 @@ Newest first. Each version was pushed to `main` when finished.
 
 ## 4. How to run
 - Open `index.html` in Chrome, Edge, Firefox or Safari. No build step, no server.
-- Online play works from `file://` too, but both players need the same files; normally use a hosted copy.
+- Online play works from `file://` too, but both players need the same files; normally use the live site.
 
 ## 5. Architecture notes for changes
 - **Rules belong in `js/engine.js`** and must stay free of DOM code, so tests and the computer can run them.
@@ -221,8 +234,16 @@ Newest first. Each version was pushed to `main` when finished.
 - Online, both players need the same version. After deploying a protocol change, ask players to reload.
 
 ## 8. Deployment
-- Not deployed yet. GitHub Pages steps are in the README (Settings → Pages → `main`, root). Netlify works too (drag the folder in), as Auction XI does.
-- Deploying publishes to everyone, so get the owner's go-ahead first. Never deploy `Reference/`.
+- **Live site:** Netlify, site `hnefatafl-viking-chess` (siteId `2270a643-98f0-4aea-bc4b-3f1ac4f8262a`), team Drag375. Dashboard: https://app.netlify.com/projects/hnefatafl-viking-chess
+- **Deploy folder:** `Viking_Chess_Online/` inside the project. Its `.netlify/state.json` links it to the site. It is a copy of the repository files; copy changed files into it (never `Reference/` or `.git`), then from inside it run:
+  ```
+  npx netlify-cli deploy --prod --dir .
+  ```
+  This needs a logged-in Netlify CLI (`npx netlify-cli login`).
+- **Visitor protection:** off (`sso_login: false`). A new Netlify site starts with it on.
+- **Rollback:** publish an earlier deploy from the dashboard's **Deploys** page.
+- **Approval:** deploying publishes to everyone, so get the owner's go-ahead first.
+- **GitHub Pages:** not set up; steps are in the README.
 
 ## 9. Testing
 - **Rules:** `node tests/engine.test.js` (28 tests).

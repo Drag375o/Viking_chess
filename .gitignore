@@ -1,6 +1,9 @@
 # Design reference photos are downloaded, copyrighted images: never publish them
 Reference/
 
+# Local deploy copy for Netlify (see last_Update.md, Deployment)
+Viking_Chess_Online/
+
 # Local tooling
 node_modules/
 .netlify/

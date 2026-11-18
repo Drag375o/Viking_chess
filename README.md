@@ -1,5 +1,7 @@
 # Hnefatafl: Viking Chess
 
+**▶ Play now: [hnefatafl-viking-chess.netlify.app](https://hnefatafl-viking-chess.netlify.app)**
+
 A browser version of **Hnefatafl** ("the King's table"), the board game played across the Viking world. One side defends a King and tries to get him to a corner; the other side has twice as many warriors and tries to trap him.
 
 Play against the computer, against a friend on the same screen, or **online** against a friend on another device with a 5-letter room code. Nothing to install.
@@ -169,9 +171,21 @@ It plays either side, chooses a side when it wins the toss, and stands in for on
 
 ## Running and hosting
 
+- **Online:** the game is live at [hnefatafl-viking-chess.netlify.app](https://hnefatafl-viking-chess.netlify.app). Both online players must use the same web address to find each other's rooms.
 - **Locally:** open `index.html` in any modern browser (Chrome, Edge, Firefox, Safari). No build step.
 - **Offline:** vs Computer and same-screen games work offline. Fonts fall back to system fonts, and online rooms need internet.
-- **GitHub Pages:** in this repository go to **Settings → Pages**, set **Source** to *Deploy from a branch*, branch `main`, folder `/ (root)`, and save. After a minute the game is live at `https://<username>.github.io/Viking_chess/`. Both online players must use the same address.
+
+### Updating the live site
+The live site is published from a copy of the game in the `Viking_Chess_Online/` folder (kept on the owner's computer, not in this repository). That folder is linked to the Netlify site through its `.netlify` folder. After changing the game, copy the changed files into it and run this from inside it:
+
+```
+npx netlify-cli deploy --prod --dir .
+```
+
+Site dashboard: [app.netlify.com/projects/hnefatafl-viking-chess](https://app.netlify.com/projects/hnefatafl-viking-chess). Visitor protection is turned off so anyone with the link can play. To undo a bad update, publish an earlier deploy from the dashboard's **Deploys** page. Never copy the `Reference/` images into that folder.
+
+### GitHub Pages (alternative)
+In this repository go to **Settings → Pages**, set **Source** to *Deploy from a branch*, branch `main`, folder `/ (root)`, and save. After a minute the game is live at `https://<username>.github.io/Viking_chess/`. Online players must use the same address as each other.
 
 ### Tests
 
